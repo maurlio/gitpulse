@@ -3,6 +3,14 @@ mod http;
 mod json;
 mod github;
 
+use std::process;
+use cli::Config;
+
 fn main() {
-    println!("Hello, welcome to GitPulse!");
+    let config = Config::build().unwrap_or_else(|err| {
+        eprintln!("{}", err);
+        process::exit(1);
+    });
+
+    println!("Buscando atividades do usuário: @{}", config.username);
 }
