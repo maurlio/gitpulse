@@ -1,6 +1,7 @@
 use std::io::Read;
 use ureq;
 
+#[allow(dead_code)]
 pub struct HttpResponse {
     pub status_code: u16,
     pub body: String,
@@ -9,7 +10,10 @@ pub struct HttpResponse {
 pub fn get_github_events(username: &str) -> Result<HttpResponse, Box<dyn std::error::Error>> {
     let url = format!("https://api.github.com/users/{}/events", username);
 
-    let response = ureq::get(&url).set("User-Agent", "gitpulse-cli").call()?;
+    let response = ureq::get(&url)
+        .set("User-Agent", "gitpulse-cli")
+        .call()?;
+        
     let status_code = response.status();
     let mut body = String::new();
 

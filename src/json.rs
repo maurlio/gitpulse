@@ -9,20 +9,38 @@ pub fn parse_events(json_str: &str) -> Result<Vec<GitHubEvent>, Box<dyn std::err
 pub fn format_event(event: &GitHubEvent) -> String {
     match event.event_type.as_str() {
         "PushEvent" => {
-            let count = event.payload.commits.as_ref().map_or(0, |c| c.len());
-            format!("Pushed {} commit(s) to {}", count, event.repo.name)
+            // Tenta obter o número de commits pelo tamanho da lista ou pelo campo 'size'
+            let count = event
+                .payload
+                .commits
+                .as_ref()
+                .map_or(event.payload.size.unwrap_or(0), |c| c.len() as u32);
+            format!("Fez push de {} commit(s) em {}", count, event.repo.name)
         }
         "IssuesEvent" => {
-            let action = event.payload.action.as_deref().unwrap_or("opened");
-            format!("{} an issue in {}", action, event.repo.name)
+            let action = match event.payload.action.as_deref().unwrap_or("opened") {
+                "opened" => "Abriu",
+                "closed" => "Fechou",
+                "reopened" => "Reabriu",
+                other => other,
+            };
+            format!("{} uma issue em {}", action, event.repo.name)
         }
         "WatchEvent" => {
-            format!("Starred {}", event.repo.name)
+            format!("Deu uma estrela (star) em {}", event.repo.name)
         }
         "CreateEvent" => {
-            let ref_type = event.payload.ref_type.as_deref().unwrap_or("resource");
-            format!("Created a new {} in {}", ref_type, event.repo.name)
+            let ref_type = match event.payload.ref_type.as_deref().unwrap_or("recurso") {
+                "branch" => "branch",
+                "repository" => "repositório",
+                "tag" => "tag",
+                other => other,
+            };
+            format!("Criou um novo {} em {}", ref_type, event.repo.name)
         }
-        _ => format!("{} in {}", event.event_type, event.repo.name),
+        "PullRequestEvent" => {
+            format!("Interagiu com um Pull Request em {}", event.repo.name)
+        }
+        _ => format!("Atividade de {} em {}", event.event_type, event.repo.name),
     }
 }
