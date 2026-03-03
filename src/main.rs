@@ -21,11 +21,27 @@ fn main() {
     match http::get_github_events(&config.username) {
         Ok(response) => {
             println!("Sucesso! Eventos capturados.");
+
+            match json::parse_events(&response.body) {
+                Ok(events) => {
+                    if events.is_empty() {
+                        println!("Nenhuma atividade recente encontrada.");
+                    } else {
+                        for event in events.iter().take(10) {
+                            println!("- {}", json::format_event(event));
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Erro ao processar dados da API: {}", e),
+            }
         }
         Err(e) => {
             if let Some(ureq::Error::Status(code, _)) = e.downcast_ref::<ureq::Error>() {
                 if *code == 404 {
-                    eprintln!("Erro: Usuário '@{}' não encontrado no GitHub.", config.username);
+                    eprintln!(
+                        "Erro: Usuário '@{}' não encontrado no GitHub.",
+                        config.username
+                    );
                 } else {
                     eprintln!("Erro na API do GitHub: Status {}", code);
                 }
