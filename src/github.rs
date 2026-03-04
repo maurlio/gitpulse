@@ -21,7 +21,8 @@ pub struct Payload {
     pub commits: Option<Vec<Commit>>,
     pub action: Option<String>,
     pub ref_type: Option<String>,
-    pub size: Option<u32>, // Adicionado para capturar o número de commits de forma alternativa
+    pub size: Option<u32>, 
+    pub distinct_size: Option<u32>,
 }
 
 #[allow(dead_code)]
