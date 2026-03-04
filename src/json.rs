@@ -9,13 +9,14 @@ pub fn parse_events(json_str: &str) -> Result<Vec<GitHubEvent>, Box<dyn std::err
 pub fn format_event(event: &GitHubEvent) -> String {
     match event.event_type.as_str() {
         "PushEvent" => {
-            // Tenta obter o número de commits pelo tamanho da lista ou pelo campo 'size'
             let count = event
                 .payload
-                .commits
-                .as_ref()
-                .map_or(event.payload.size.unwrap_or(0), |c| c.len() as u32);
-            format!("Fez push de {} commit(s) em {}", count, event.repo.name)
+                .distinct_size
+                .or(event.payload.size)
+                .unwrap_or_else(|| event.payload.commits.as_ref().map_or(0, |c| c.len() as u32));
+            
+            let final_count = if count == 0 { 1 } else { count };
+            format!("Fez push de {} commit(s) em {}", final_count, event.repo.name)
         }
         "IssuesEvent" => {
             let action = match event.payload.action.as_deref().unwrap_or("opened") {
